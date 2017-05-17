@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd">
+
+
+	<import resource="classpath:hibernate.xml" />
+	<!-- 使用注解配置就需要注册的相应的 BeanPostProcessor为了方便一个一个注册 Spring为我们提供了一种极为方便注册这些BeanPostProcessor的方式， 
+		即使用<context:annotation- config/>隐式地向 Spring容器注册AutowiredAnnotationBeanPostProcessor、 
+		RequiredAnnotationBeanPostProcessor、 CommonAnnotationBeanPostProcessor 以及PersistenceAnnotationBeanPostProcessor这4个BeanPostProcessor -->
+	<context:annotation-config />
+
+	<!-- 标签将用于激活Spring MVC注释扫描功能 -->
+	<context:component-scan base-package="com">
+		<!-- 过滤组件：包含 -->
+		<!-- <context:include-filter type="regex" expression="com.lph.app.core.service.*"/> -->
+		<!-- 过滤组件：不包含 -->
+		<!-- <context:exclude-filter type="regex" expression="com.lph.app.core.service.*"/> -->
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Service" />
+	</context:component-scan>
+
+	<bean id="helloBean" class="com.lph.app.core.HelloWorld">
+		<property name="name" value="lph" />
+	</bean>
+
+	<bean id="customerDAO" class="com.lph.app.core.dao.impl.JdbcCustomerDAO">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 声明bean配置文件和提供一个PropertyPlaceholderConfigurer映射 -->
+<!-- 	<bean -->
+<!-- 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"> -->
+<!-- 		<property name="location"> -->
+<!-- 			<value>message.properties</value> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
+	
+	<context:property-placeholder location="classpath:message.properties" ignore-resource-not-found="false"/>
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+	<!-- 默认模式，通过ref属性来连接 Auto-Wiring ‘no’ -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- <property name="person" ref="person"/> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- </bean> -->
+
+	<!-- 按属性名称自动装配。在这种情况下，由于对“person” bean的名称是相同于“customer” bean 的属性(“person”)名称， 
+		所以，Spring会自动通过setter方法将其装配 – “setPerson(Person person) set方法的名字和被注入的id名称一致才能注入“. 
+		Auto-Wiring ‘byName’ -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer" -->
+	<!-- autowire="byName" /> -->
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- </bean> -->
+
+
+	<!-- 通过构造函数参数的数据类型按属性自动装配Bean。在这种情况下，由于“person” bean的数据类型与“customer” bean的属性(Person对象)的构造函数参数的数据类型是一样的，所以，Spring通过构造方法自动装配 
+		– “public Customer(Person person)“. 此种方式目前实验看来需要一个只有该类型参数的构造器才能注入 -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer" -->
+	<!-- autowire="constructor" /> -->
+
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- </bean> -->
+
+
+	<!-- 通过按属性的数据类型自动装配Bean。在这种情况下，由于“Person” bean中的数据类型是与“customer” bean的属性(Person对象)的数据类型一样的，所以，Spring会自动通过setter方法将其自动装配。– 
+		“setPerson(Person person) -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer" -->
+	<!-- autowire="byType" /> -->
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- 正常注入属性方式 -->
+	<!-- <property name="name"> -->
+	<!-- <value>lph</value> -->
+	<!-- </property> -->
+	<!-- 快捷方式 -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- p:name="yiibai" p:type="txt" -->
+	<!-- </bean> -->
+
+	<!-- 通过使用“p”模式作为注入值到一个属性。 -->
+	<!-- <bean id="persons" class="com.lph.app.core.entity.Person" p:name="lph" 
+		/> -->
+
+	<!-- 内部bean -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- setxxx注入方式 -->
+	<!-- <property name="person"> -->
+	<!-- <bean class="com.lph.app.core.entity.Person"> -->
+	<!-- 正常注入属性方式 -->
+	<!-- <property name="name"> -->
+	<!-- <value>lph</value> -->
+	<!-- </property> -->
+	<!-- 快捷方式 -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- p:name="yiibai" p:type="txt" -->
+	<!-- </bean> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+
+	<!-- 内部bean构造注入 方式 -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- 构造注入方式 -->
+	<!-- <constructor-arg> -->
+	<!-- <bean class="com.lph.app.core.entity.Person"> -->
+	<!-- 正常注入属性方式 -->
+	<!-- <property name="name"> -->
+	<!-- <value>lph</value> -->
+	<!-- </property> -->
+	<!-- 快捷方式 -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- p:name="yiibai" p:type="txt" -->
+	<!-- </bean> -->
+	<!-- </constructor-arg> -->
+	<!-- <property name="person" ref="person" /> -->
+	<!-- list -->
+	<!-- <property name="lists"> -->
+	<!-- <list> -->
+	<!-- <value>1</value> -->
+	<!-- <value>1</value> -->
+	<!-- <ref bean="person" /> -->
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="zyj" /> -->
+	<!-- </bean> -->
+	<!-- </list> -->
+	<!-- </property> -->
+
+	<!-- sets -->
+	<!-- <property name="sets"> -->
+	<!-- <set> -->
+	<!-- <value>1</value> -->
+	<!-- <value>1</value> -->
+	<!-- <ref bean="person" /> -->
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lyy" /> -->
+	<!-- </bean> -->
+	<!-- </set> -->
+	<!-- </property> -->
+
+	<!-- maps -->
+	<!-- <property name="maps"> -->
+	<!-- <map> -->
+	<!-- <entry key="key 1" value="1" /> -->
+	<!-- <entry key="key 2" value="3" /> -->
+	<!-- <entry key="person"> -->
+	<!-- <bean class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="ytm" /> -->
+	<!-- </bean> -->
+	<!-- </entry> -->
+	<!-- </map> -->
+	<!-- </property> -->
+
+	<!-- java.util.Properties -->
+	<!-- <property name="pros"> -->
+	<!-- <props> -->
+	<!-- <prop key="admin">admin@yiibai.com</prop> -->
+	<!-- <prop key="support">support@yiibai.com</prop> -->
+	<!-- </props> -->
+	<!-- </property> -->
+
+	<!-- </bean> -->
+
+	<!-- 单例模式 -->
+	<!-- <bean id="customerService" class="com.lph.app.core.service.CustomerService" 
+		/> -->
+
+	<!-- 原型模式 scope 声明bean的作用域 -->
+	<!-- <bean id="customerService" class="com.lph.app.core.service.CustomerService" 
+		scope="prototype"/> -->
+
+	<!-- 自动扫描相应包内的注解 -->
+	<!-- <context:component-scan base-package="com.lph.app.core" /> -->
+
+
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- <property name="ability" ref="invisible"/> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="invisible" class="com.lph.app.core.entity.Ability"> -->
+	<!-- <property name="skill" value="Invisible"/> -->
+	<!-- </bean> -->
+
+	<!-- 当person中的ability声明为一个对象时，byType就只能声明一个ability的实例, 当ability声明为一个集合对象时,byType可以声明多个ability的实例 -->
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person" autowire="byType" 
+		/> -->
+
+	<!-- <bean id="steal" class="com.lph.app.core.entity.Ability"> -->
+	<!-- <property name="skill" value="Steal" /> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="invisible" class="com.lph.app.core.entity.Ability"> -->
+	<!-- <property name="skill" value="Invisible" /> -->
+	<!-- </bean> -->
+
+	<!-- spring装配 -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- <property name="address" ref="address"/> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="address" class="com.lph.app.core.entity.Address"> -->
+	<!-- <property name="fulladdress" value="苏州" /> -->
+	<!-- </bean> -->
+
+	<!-- spring byName装配 调用相应的setXXX方法注入， id与setXXX方法中的XXX一致时便能注入 -->
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer" -->
+	<!-- autowire="byName" /> -->
+
+	<!-- <bean id="address" class="com.lph.app.core.entity.Address"> -->
+	<!-- <property name="fulladdress" value="苏州" /> -->
+	<!-- </bean> -->
+
+	<!-- spring装配 -->
+	<!-- <bean id="developer" class="com.lph.app.core.entity.Developer"> -->
+	<!-- <constructor-arg> -->
+	<!-- <ref bean="language" /> -->
+	<!-- </constructor-arg> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="language" class="com.lph.app.core.entity.Language"> -->
+	<!-- <property name="name" value="JAVA" /> -->
+	<!-- </bean> -->
+
+	<!-- 构造函数自动装配 -->
+	<!-- <bean id="developer" class="com.lph.app.core.entity.Developer" autowire="constructor" 
+		/> -->
+
+	<!-- <bean id="language" class="com.lph.app.core.entity.Language"> -->
+	<!-- <property name="name" value="JAVA" /> -->
+	<!-- </bean> -->
+
+	<!-- 注册AutowiredAnnotationBeanPostProcessor 要启用@Autowired， 必须注册“AutowiredAnnotationBeanPostProcessor'，你可以用两种方式做到这一点： -->
+	<!-- 第一种:Include <context:annotation-config /> -->
+	<context:annotation-config />
+
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- <property name="action" value="buy" /> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="personA" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- <property name="address" value="苏州" /> -->
+	<!-- <property name="age" value="25" /> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="personB" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="zyj" /> -->
+	<!-- <property name="address" value="苏州" /> -->
+	<!-- <property name="age" value="25" /> -->
+	<!-- </bean> -->
+
+
+
+	<!-- 第二种:包含 AutowiredAnnotationBeanPostProcessor -->
+	<!-- <bean -->
+	<!-- class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" 
+		/> -->
+
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer" /> -->
+
+	<!-- <bean id="personA" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- <property name="address" value="苏州" /> -->
+	<!-- <property name="age" value="25" /> -->
+	<!-- </bean> -->
+
+
+	<!-- <bean id="personB" class="com.lph.app.core.entity.Person"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- <property name="address" value="苏州" /> -->
+	<!-- <property name="age" value="25" /> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="outputHelper" class="com.lph.app.core.entity.OutputHelper"> -->
+	<!-- <property name="outputGenerator"> -->
+	<!-- <ref bean="csvOutputGenerator" /> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="csvOutputGenerator" class="com.lph.app.core.dao.impl.CsvOutputGenerator" 
+		/> -->
+	<!-- <bean id="jsonOutputGenerator" class="com.lph.app.core.dao.impl.JsonOutputGenerator" 
+		/> -->
+
+	<!-- <bean id="person" class="com.lph.app.core.entity.Person"> -->
+	<!-- <constructor-arg type="java.lang.String"> -->
+	<!-- <value>lph</value> -->
+	<!-- </constructor-arg> -->
+	<!-- <constructor-arg type="java.lang.String"> -->
+	<!-- <value>188</value> -->
+	<!-- </constructor-arg> -->
+	<!-- <constructor-arg type="java.lang.Integer"> -->
+	<!-- <value>25</value> -->
+	<!-- </constructor-arg> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- <property name="lists"> -->
+	<!-- ListFactoryBean 示例，在运行时它将实例化一个ArrayList，并注入到一个 bean 属性 -->
+	<!-- <bean class="org.springframework.beans.factory.config.ListFactoryBean"> -->
+	<!-- <property name="targetListClass"> -->
+	<!-- <value>java.util.ArrayList</value> -->
+	<!-- </property> -->
+	<!-- <property name="sourceList"> -->
+	<!-- <list> -->
+	<!-- <value>1</value> -->
+	<!-- <value>tow</value> -->
+	<!-- <value>three</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- util 模式和<util:list> 来达到同样的目的 -->
+	<!-- <util:list list-class="java.util.ArrayList"> -->
+	<!-- <value>one</value> -->
+	<!-- <value>tow</value> -->
+	<!-- <value>three</value> -->
+	<!-- </util:list> -->
+	<!-- </property> -->
+
+	<!-- <property name="sets"> -->
+	<!-- SetFactoryBean 示例，在运行时它将实例化一个HashSet，并注入到一个 bean 属性 -->
+	<!-- <bean class="org.springframework.beans.factory.config.SetFactoryBean"> -->
+	<!-- <property name="targetSetClass"> -->
+	<!-- <value>java.util.HashSet</value> -->
+	<!-- </property> -->
+	<!-- <property name="sourceSet"> -->
+	<!-- <list> -->
+	<!-- <value>one</value> -->
+	<!-- <value>two</value> -->
+	<!-- <value>three</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- util的模式 和<util:set> 来做到同样的事情 -->
+	<!-- <util:set set-class="java.util.HashSet"> -->
+	<!-- <value>one</value> -->
+	<!-- <value>two</value> -->
+	<!-- <value>three</value> -->
+	<!-- </util:set> -->
+	<!-- </property> -->
+
+	<!-- <property name="maps"> -->
+	<!-- MapFactoryBean。例如，在运行时它将实例化一个HashMap，并注入到一个bean属性 -->
+	<!-- <bean class="org.springframework.beans.factory.config.MapFactoryBean"> -->
+	<!-- <property name="targetMapClass"> -->
+	<!-- <value>java.util.HashMap</value> -->
+	<!-- </property> -->
+	<!-- <property name="sourceMap"> -->
+	<!-- <map> -->
+	<!-- <entry key="one" value="l" /> -->
+	<!-- <entry key="two" value="p" /> -->
+	<!-- <entry key="three" value="h" /> -->
+	<!-- </map> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+	<!-- 使用 util 的模式和<util:map>来做到同样的事情。 -->
+	<!-- <util:map map-class="java.util.HashMap"> -->
+	<!-- <entry key="one" value="l" /> -->
+	<!-- <entry key="two" value="p" /> -->
+	<!-- <entry key="three" value="h" /> -->
+	<!-- </util:map> -->
+	<!-- </property> -->
+	<!-- <property name="date"> -->
+	<!-- <bean factory-bean="dateFormat" factory-method="parse"> -->
+	<!-- <constructor-arg value="2017-4-1 13:34:48" /> -->
+	<!-- </bean> -->
+	<!-- </property> -->
+	<!-- <property name="date" value="2017-4-1 13:37:41"/> -->
+
+	<!-- <property name="person" ref="person" /> -->
+	<!-- </bean> -->
+
+	<!-- 声明一个dateFormat bean，在“customer” Bean， 引用 “dateFormat” bean作为一个工厂bean。 
+		该工厂方法将调用SimpleDateFormat.parse()自动转换成字符串Date对象 -->
+	<!-- <bean id="dateFormat" class="java.text.SimpleDateFormat"> -->
+	<!-- <constructor-arg value="yyyy-MM-DD HH:mm:ss" /> -->
+	<!-- </bean> -->
+
+	<!-- 声明一个 CustomDateEditor 类将字符串转换成 java.util.Date。 -->
+	<!-- <bean id="dateEditor" -->
+	<!-- class="org.springframework.beans.propertyeditors.CustomDateEditor"> -->
+
+	<!-- <constructor-arg> -->
+	<!-- <bean class="java.text.SimpleDateFormat"> -->
+	<!-- <constructor-arg value="yyyy-MM-dd HH:mm:ss" /> -->
+	<!-- </bean> -->
+	<!-- </constructor-arg> -->
+	<!-- <constructor-arg value="true" /> -->
+	<!-- </bean> -->
+	<!-- 并声明另一个“CustomEditorConfigurer”，使 Spring转换 bean 属性，其类型为java.util.Date。 -->
+	<!-- <bean class="org.springframework.beans.factory.config.CustomEditorConfigurer"> -->
+	<!-- <property name="customEditors"> -->
+	<!-- <map> -->
+	<!-- <entry key="java.util.Date"> -->
+	<!-- <ref bean="dateEditor" /> -->
+	<!-- </entry> -->
+	<!-- </map> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+
+	<!-- 一个子 bean 或继承的bean可以继承其父 bean 的配置，属性和一些属性。另外，子 Bean 允许覆盖继承的值 -->
+	<!-- abstract="true" 继承抽象 此bean无法实例化 -->
+	<!-- <bean id="basePerson" class="com.lph.app.core.entity.Person" -->
+	<!-- abstract="true"> -->
+	<!-- <property name="name" value="lph" /> -->
+	<!-- </bean> -->
+
+	<!-- 其实，父 bean 是不需要定义类的属性，很多时候，你可能只需要一个共同的属性共享 -->
+	<!-- <bean id="basePersonAttribute" abstract="true"> -->
+	<!-- <property name="name" value="lph"/> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="person" parent="basePerson"> -->
+	<!-- <property name="name" value="zyj" />可以覆盖父bean的属性 -->
+	<!-- <property name="address" value="苏州" /> -->
+	<!-- <property name="age" value="25" /> -->
+	<!-- </bean> -->
+
+	<!-- 将自定义的@Required-style注解 注册到RequiredAnnotationBeanPostProcessor中 -->
+	<!-- <bean -->
+	<!-- class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"> -->
+	<!-- <property name="requiredAnnotationType" value="com.lph.app.core.annotation.Mandatory" 
+		/> -->
+	<!-- </bean> -->
+
+	<!-- afterPropertiesSet()方法被调用在 message 属性设置后，而 destroy()方法是在调用 context.close()之后; 
+		不建议使用InitializingBean和DisposableBean的接口，因为它将你的代码紧耦合到 Spring 代码中。 一个更好的做法应该是在bean的配置文件属性指定 
+		init-method和destroy-method。 -->
+	<!-- <bean id="customerService" class="com.lph.app.core.service.CustomerService"> -->
+	<!-- <property name="message" value="I'm property messag" /> -->
+	<!-- </bean> -->
+
+	<!-- spring EL 表达式 -->
+	<!-- <bean id="item" class="com.lph.app.core.entity.Item"> -->
+	<!-- <property name="name" value="itemA"/> -->
+	<!-- <property name="qty" value="10"/> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="customer" class="com.lph.app.core.entity.Customer"> -->
+	<!-- <property name="item" value="#{item}"/> -->
+	<!-- <property name="itemName" value="#{item.name}"/> -->
+	<!-- </bean> -->
+
+	<bean id="springAOP" class="com.lph.app.core.entity.SpringAOP">
+		<property name="name" value="lph" />
+		<property name="url" value="http://www.baidu.com" />
+	</bean>
+
+	<!-- 之前通知 -->
+	<bean id="beforeMethod" class="com.lph.app.core.advice.BeforeMethod" />
+
+	<!-- 返回后通知 -->
+	<bean id="afterMethod" class="com.lph.app.core.advice.AfterMethod" />
+
+	<!-- 抛出后通知 -->
+	<bean id="throwException" class="com.lph.app.core.advice.ThrowException" />
+
+	<!-- 环绕通知 -->
+	<bean id="aroundMethod" class="com.lph.app.core.advice.AroundMethod" />
+
+
+	<!-- 在 bean 配置文件(applicationContext.xml)，创建一个 bean 的 beforeMethod 类，并命名为“springAOPProxy” 
+		作为一个新的代理对象。 ‘target’ – 定义你想拦截的bean。 ‘interceptorNames’ – 定义要应用这个代理/目标对象的类(通知) -->
+	<!-- <bean id="springAOPProxy" class="org.springframework.aop.framework.ProxyFactoryBean"> -->
+	<!-- <property name="target" ref="springAOP" /> -->
+	<!-- <property name="interceptorNames"> -->
+	<!-- <list> -->
+	<!-- <value>beforeMethod</value> -->
+	<!-- <value>afterMethod</value> -->
+	<!-- <value>throwException</value> -->
+	<!-- <value>aroundMethod</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="springAOPYiibaicut" class="org.springframework.aop.support.NameMatchMethodPointcut"> -->
+	<!-- <property name="mappedName" value="pritName" /> -->
+	<!-- </bean> -->
+
+	<!-- 切入点 - 名称匹配的例子 -->
+	<!-- 创建springAOPAdvisor通知 bean，通知和切入点相关联 -->
+
+
+	<!-- 手动代理 -->
+	<!-- <bean id="springAOPProxy" class="org.springframework.aop.framework.ProxyFactoryBean"> -->
+	<!-- <property name="target" ref="springAOP" /> -->
+	<!-- <property name="interceptorNames"> -->
+	<!-- <list> -->
+	<!-- <value>springAOPAdvisor</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="springAOPAdvisor" -->
+	<!-- class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor"> -->
+	<!-- 切入点 -->
+	<!-- <property name="advice" ref="aroundMethod" /> -->
+	<!-- 拦截方法名 -->
+	<!-- <property name="mappedName" value="printName" /> -->
+	<!-- </bean> -->
+
+	<!-- 切入点 - 正则表达式的例子 -->
+	<!-- 在实践中，可以用它来管理DAO层，声明“.*DAO.*” 拦截所有的DAO类来支持事务。 -->
+	<!-- <bean id="springAOPAdvisor" -->
+	<!-- class="org.springframework.aop.support.RegexpMethodPointcutAdvisor"> -->
+	<!-- <property name="patterns"> -->
+	<!-- <list> -->
+	<!-- <value>.*URL.*</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- <property name="advice" ref="aroundMethod" /> -->
+	<!-- </bean> -->
+
+	<!-- 自动代理 -->
+	<!-- <bean -->
+	<!-- class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator"> -->
+	<!-- <property name="beanNames"> -->
+	<!-- <list> -->
+	<!-- <value>*AOP</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- <property name="interceptorNames"> -->
+	<!-- <list> -->
+	<!-- <value>springAOPAdvisor</value> -->
+	<!-- </list> -->
+	<!-- </property> -->
+	<!-- </bean> -->
+
+	<!-- DefaultAdvisorAutoProxyCreator示例 -->
+	<!-- <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/> -->
+
+
+	<!-- springAOP + AspectJ -->
+	<aop:aspectj-autoproxy />
+	<bean id="customerDao" class="com.lph.app.core.dao.impl.JdbcCustomerDAO" />
+	<!-- Aspect -->
+	<bean id="logAspect" class="com.lph.app.core.common.LoggingAspect" />
+
+	<aop:config>
+		<aop:aspect id="aspectLoggging" ref="logAspect">
+			<!-- @Before -->
+			<aop:pointcut id="pointCutBefore"
+				expression="execution(* com.lph.app.core.dao.CustomerDAO.addCustomer(..))" />
+			<aop:before method="logBefore" pointcut-ref="pointCutBefore" />
+
+			<!-- @After -->
+			<aop:pointcut id="pointCutAfter"
+				expression="execution(* com.lph.app.core.dao.CustomerDAO.addCustomer(..))" />
+			<aop:after method="logAfter" pointcut-ref="pointCutAfter" />
+
+			<!-- @AfterReturning -->
+			<aop:pointcut id="pointCutAfterReturning"
+				expression="execution(* com.lph.app.core.dao.CustomerDAO.addCustomerReturnValue(..))" />
+			<aop:after-returning method="logAfterReturning"
+				returning="result" pointcut-ref="pointCutAfterReturning" />
+
+
+			<!-- @AfterThrowing -->
+			<aop:pointcut id="pointCutAfterThrowing"
+				expression="execution(* com.lph.app.core.dao.CustomerDAO.addCustomerThrowException(..))" />
+			<aop:after-throwing method="logAfterThrowing"
+				throwing="error" pointcut-ref="pointCutAfterThrowing" />
+
+			<!-- @Around -->
+			<aop:pointcut id="pointCutAround"
+				expression="execution(* com.lph.app.core.dao.CustomerDAO.addCustomerAround(..))" />
+
+			<aop:around method="logAround" pointcut-ref="pointCutAround" />
+		</aop:aspect>
+	</aop:config>
+
+	<!-- <bean id="stockBo" class="com.lph.app.core.dao.impl.StockBoImpl"> -->
+	<!-- <property name="stockDao" ref="stockDao" /> -->
+	<!-- </bean> -->
+
+	<!-- <bean id="stockDao" class="com.lph.app.core.dao.impl.StockDaoImpl"> -->
+	<!-- <property name="sessionFactory" ref="sessionFactory" /> -->
+	<!-- </bean> -->
+
+	<!-- springMail -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.ym.163.com" />
+		<property name="port" value="465" />
+		<property name="username" value="app@smartwasp.com" />
+		<property name="password" value="xhf2016" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<!-- 使用465加密端口需要此项 -->
+				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="mail" class="com.lph.app.core.util.Mail">
+		<property name="mailSender" ref="mailSender" />
+		<property name="simpleMailMessage" ref="mailMessage" />
+	</bean>
+
+	<bean id="javaMailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.ym.163.com" />
+		<property name="port" value="465" />
+		<property name="username" value="app@smartwasp.com" />
+		<property name="password" value="xhf2016" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<!-- 使用465加密端口需要此项 -->
+				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage">
+		<property name="from" value="app@smartwasp.com" />
+		<property name="to" value="673653670@qq.com" />
+		<property name="subject" value="Testing Subject" />
+		<property name="text">
+			<value>
+        <![CDATA[
+            Dear %s,
+            Mail Content : %s
+        ]]>
+			</value>
+		</property>
+	</bean>
+
+	<bean id="counterService" class="com.lph.app.core.service.CounterService" />
+
+
+</beans>
